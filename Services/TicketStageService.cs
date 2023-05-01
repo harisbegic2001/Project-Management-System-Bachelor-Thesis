@@ -24,11 +24,20 @@ public class TicketStageService : ITicketStageService
 
         //Provjerava da li taj TicketStage uopšte postoji --> provjera po Id-u
 
-        var ticketStageToUpdate = await connection.QueryFirstOrDefaultAsync<ReadTicekStageDto>($"SELECT * FROM TicketStage WHERE Id = '{ticketStageId}'");
-        if (ticketStageToUpdate is null)
+        var ticketStageToDelete = await connection.QueryFirstOrDefaultAsync<ReadTicekStageDto>($"SELECT * FROM TicketStage WHERE Id = '{ticketStageId}'");
+        if (ticketStageToDelete is null)
         {
             throw new TicketStageNotFoundException();
         }
+        
+        //Check if the Ticket Stage is the last stage for the specified project
+        var numberOfTicketStagesInproject = await connection.QueryFirstOrDefaultAsync<int>($"SELECT COUNT(*) FROM TicketStage WHERE ProjectId = '{ticketStageToDelete.ProjectId}'");
+
+        if (numberOfTicketStagesInproject < 2)
+        {
+            throw new NotEnoughStagesException();
+        }
+        
 
         var deleteTicketStage = await connection.ExecuteAsync($"DELETE FROM TicketStage WHERE Id = '{ticketStageId}'");
 
@@ -45,6 +54,7 @@ public class TicketStageService : ITicketStageService
         {
             throw new TicketStageNotFoundException();
         }
+        
         
         //Provjera da li je korisnik na tom projektu
         var checkIfCallerOnTheProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE ProjectId = '{ticketStageToUpdate.ProjectId}' AND UserId = '{callerId}'");

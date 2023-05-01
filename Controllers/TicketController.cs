@@ -55,7 +55,8 @@ public class TicketController : ControllerBase
     {
         try
         {
-            var updatedUser = await _ticketService.UpdateTicketAsync(updateTicketDto, ticketId, User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var updatedUser = await _ticketService.UpdateTicketAsync(updateTicketDto, ticketId,
+                User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             return Ok(updatedUser);
         }
         catch (TicketNotFoundException e)
@@ -71,6 +72,10 @@ public class TicketController : ControllerBase
             return BadRequest(e.Message);
         }
         catch (TicketTaskDoesNotExistException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (TicketStageNotFoundException e)
         {
             return BadRequest(e.Message);
         }

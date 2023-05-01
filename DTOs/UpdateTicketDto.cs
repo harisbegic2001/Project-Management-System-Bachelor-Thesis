@@ -13,4 +13,6 @@ public class UpdateTicketDto
     public string? TicketReporter { get; set; }
 
     public int UserId { get; set; }
+
+    public int TicketStageId { get; set; }
 }

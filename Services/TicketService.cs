@@ -71,6 +71,10 @@ public class TicketService : ITicketService
         var ticketName = checkIfProjectExists is null ? $"{projectKey}-1" : $"{projectKey}-{finalNumber}";
         
         // KRAJ LOGIKE ZA IMENOVANJE TICKETA
+        
+        //ASSIGN TICKET STAGE TO TICKET --> BY DEFAULT LET IT BE THE FIRST AVAILABLE FOR THE PROJECT
+        var firstTicketStageId = await connection.QueryFirstOrDefaultAsync<int>($"SELECT TOP 1 Id FROM TicketStage WHERE ProjectId = '{projectId}'");
+        
         var newTicket = new Ticket
         {
             TicketName = createTicketDto.TicketName,
@@ -78,13 +82,14 @@ public class TicketService : ITicketService
             TicketDescription = createTicketDto.TicketDescription,
             TicketPriority = createTicketDto.TicketPriority,
             TicketTask = createTicketDto.TicketType,
-            TicketReporter = creatorUserName,
-            UserId = createTicketDto.Asignee,
-            ProjectId = projectId
+            TicketReporter = creatorUserName, //Vjerovatno neće trebati
+            UserId = createTicketDto.Asignee, 
+            ProjectId = projectId,
+            TicketStageId = firstTicketStageId
         };
 
 
-        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId)", newTicket);
+        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId, TicketStageId) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId, @TicketStageId)", newTicket);
 
         var readTicket = new ReadTicketDto
         {
@@ -139,15 +144,15 @@ public class TicketService : ITicketService
     {
         using var connection = CreateSqlConnection();
 
-        var chechIfTicketExists = await connection.QueryFirstOrDefaultAsync<int?>($"SELECT Tickets.ProjectId FROM Tickets WHERE Tickets.Id = '{ticketId}'");
+        var checkIfTicketExists = await connection.QueryFirstOrDefaultAsync<int?>($"SELECT Tickets.ProjectId FROM Tickets WHERE Tickets.Id = '{ticketId}'");
 
-        if (chechIfTicketExists is null)
+        if (checkIfTicketExists is null)
         {
             throw new TicketNotFoundException("Ticket does not exist");
         }
         
         //CHECK IF THE CALLER IS ON PROJECT
-        var checkIfCallerOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{Int32.Parse(callerId)}' AND ProjectId = '{chechIfTicketExists}'");
+        var checkIfCallerOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{Int32.Parse(callerId)}' AND ProjectId = '{checkIfTicketExists}'");
         if (checkIfCallerOnProject is null)
         {
             throw new UserNotOnProjectException("Unauthorized");
@@ -164,9 +169,16 @@ public class TicketService : ITicketService
         {
             throw new TicketTaskDoesNotExistException();
         }
+
+        // Validating if the updating to a ticket stage is possible
+        var availableTicketStages = await connection.QueryAsync<int>($"SELECT Id FROM TicketStage WHERE ProjectId = '{checkIfTicketExists}'");
+        if (!availableTicketStages.Contains(updateTicketDto.TicketStageId))
+        {
+            throw new TicketStageNotFoundException();
+        }
         
 
-        var updatedTicket = await connection.ExecuteAsync($"UPDATE Tickets SET TicketName = '{updateTicketDto.TicketName}', TicketDescription = '{updateTicketDto.TicketDescription}', TicketPriority = '{updateTicketDto.TicketPriority}', TicketType = '{updateTicketDto.TicketType}', TicketReporter = '{updateTicketDto.TicketReporter}', UserId = '{updateTicketDto.UserId}' WHERE Id = '{ticketId}'");
+        var updatedTicket = await connection.ExecuteAsync($"UPDATE Tickets SET TicketName = '{updateTicketDto.TicketName}', TicketDescription = '{updateTicketDto.TicketDescription}', TicketPriority = '{updateTicketDto.TicketPriority}', TicketType = '{updateTicketDto.TicketType}', TicketReporter = '{updateTicketDto.TicketReporter}', UserId = '{updateTicketDto.UserId}', TicketStageId = '{updateTicketDto.TicketStageId}' WHERE Id = '{ticketId}'");
 
         return updatedTicket;
 

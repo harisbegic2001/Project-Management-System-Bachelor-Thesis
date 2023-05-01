@@ -71,6 +71,10 @@ public class TicketStagesController : ControllerBase
         {
             return NotFound(e.Message);
         }
+        catch (NotEnoughStagesException e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
 }

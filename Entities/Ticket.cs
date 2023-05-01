@@ -23,4 +23,6 @@ public class Ticket
     
     public int ProjectId { get; set; }
 
+    public int TicketStageId { get; set; }
+
 }
