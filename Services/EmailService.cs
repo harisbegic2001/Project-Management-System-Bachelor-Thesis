@@ -1,3 +1,4 @@
+using System.Security.Authentication;
 using JWT_Implementation.Constants;
 using JWT_Implementation.DTOs;
 using JWT_Implementation.EnvironmentSettings;
@@ -6,6 +7,8 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
 using MailKit.Net.Smtp;
+using MailKit.Security;
+
 
 namespace JWT_Implementation.Services;
 
@@ -20,7 +23,7 @@ public class EmailService : IEmailService
     
     
 
-    public async Task<string> SendLinkEmailAsync(string receiverAddress)
+    public  string SendLinkEmailAsync(string receiverAddress)
     {
         var loginLink = _options.LoginLink;
         var body = $"<div>Dear,</div> <br/>" +
@@ -36,14 +39,14 @@ public class EmailService : IEmailService
             Body = body,
         };
 
-        return await SendEmailAsync(sendEmailRequest);
+        return  SendEmailAsync(sendEmailRequest);
     }
     
     
     
     
     
-    public async Task<string> SendEmailAsync(SendEmailRequestDto sendEmailRequestDto)
+    public string SendEmailAsync(SendEmailRequestDto sendEmailRequestDto)
     {
         // Setting the email message
         var email = new MimeMessage();
@@ -51,21 +54,23 @@ public class EmailService : IEmailService
         email.To.Add(MailboxAddress.Parse(sendEmailRequestDto.Receiver));
         email.Subject = sendEmailRequestDto.Subject;
         email.Body = new TextPart(TextFormat.Html) { Text = sendEmailRequestDto.Body };
-
+        
         // Configuring the SMTP Client and sending the email
         using var smtpClient = new SmtpClient();
 
-        
-        await smtpClient.ConnectAsync(
+        smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+        smtpClient.Connect(
             EmailServiceConstants.Host,
             EmailServiceConstants.SmtpDefaultPort,
-            MailKit.Security.SecureSocketOptions.StartTls);
+            SecureSocketOptions.StartTls);
 
-        await smtpClient.AuthenticateAsync(_options.EmailUsername, _options.EmailPassword);
 
-        var response = await smtpClient.SendAsync(email);
-        await smtpClient.DisconnectAsync(true);
+        smtpClient.Authenticate(_options.EmailUsername, _options.EmailPassword);
 
-        return response;
+        var response =  smtpClient.Send(email);
+         smtpClient.Disconnect(true);
+
+        return  response;
     }
 }

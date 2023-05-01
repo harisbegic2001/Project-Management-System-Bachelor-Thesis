@@ -67,7 +67,7 @@ public class UsersController : ControllerBase
             "insert into Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email) values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email)",
             newUser);
 
-        await _emailService.SendLinkEmailAsync(newUser.Email!);
+        _emailService.SendLinkEmailAsync(newUser.Email!);
         
         return Ok(new ReadUserDto
         {

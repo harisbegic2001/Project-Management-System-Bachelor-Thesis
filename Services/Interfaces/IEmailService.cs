@@ -4,7 +4,7 @@ namespace JWT_Implementation.Services.Interfaces;
 
 public interface IEmailService
 {
-    Task<string> SendEmailAsync(SendEmailRequestDto sendEmailRequestDto);
+    string SendEmailAsync(SendEmailRequestDto sendEmailRequestDto);
 
-    Task<string> SendLinkEmailAsync(string receiverAddress);
+    string SendLinkEmailAsync(string receiverAddress);
 }
