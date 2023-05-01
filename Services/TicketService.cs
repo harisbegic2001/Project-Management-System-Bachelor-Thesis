@@ -50,17 +50,31 @@ public class TicketService : ITicketService
             throw new TicketTaskDoesNotExistException("Task Not Found!");
         }
 
-        var projectKey = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Projects.ProjectKey FROM Projects WHERE Projects.Id = '{projectId}'");
 
         var creatorUserName = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Users.Username FROM Users WHERE Id = '{Int32.Parse(callerId)}'");
         
         var projectName = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Projects.ProjectName FROM Projects WHERE Id = '{projectId}'");
 
-        var izvlacenje = projectKey.ToString();
+        // LOGIKA ZA IMENOVANJE TICKETA
+        
+        var projectKey = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Projects.ProjectKey FROM Projects WHERE Projects.Id = '{projectId}'");
+
+        var checkIfProjectHasTickets = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Id FROM Tickets WHERE ProjectId = '{projectId}'");
+
+        var alternativeApproach = await connection.QueryFirstOrDefaultAsync<string>($"SELECT TOP 1 TicketKey FROM Tickets WHERE ProjectId = '{projectId}' ORDER BY Id DESC ");
+
+        
+        var numberToIncrement =  alternativeApproach is null ? 0 : Convert.ToInt32(alternativeApproach.Substring(alternativeApproach.LastIndexOf("-") + 1));
+
+        var finalNumber = numberToIncrement + 1;
+        
+        var ticketName = checkIfProjectExists is null ? $"{projectKey}-1" : $"{projectKey}-{finalNumber}";
+        
+        // KRAJ LOGIKE ZA IMENOVANJE TICKETA
         var newTicket = new Ticket
         {
             TicketName = createTicketDto.TicketName,
-            TicketKey = projectKey,
+            TicketKey = ticketName,
             TicketDescription = createTicketDto.TicketDescription,
             TicketPriority = createTicketDto.TicketPriority,
             TicketTask = createTicketDto.TicketType,
@@ -70,7 +84,7 @@ public class TicketService : ITicketService
         };
 
 
-        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketTask, TicketReporter, UserId, ProjectId) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId)", newTicket);
+        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId)", newTicket);
 
         var readTicket = new ReadTicketDto
         {

@@ -32,7 +32,7 @@ public class ProjectsController : ControllerBase
 
     [HttpGet("getAllProjects")]
     [Authorize(Roles = nameof(Role.Admin))]
-    public async Task<ActionResult<IEnumerable<Project>>> GetAllProjectsAsync(string name)
+    public async Task<ActionResult<IEnumerable<Project>>> GetAllProjectsAsync(string? name)
     {
         var projects = await _projectService.GetAllProjectsAsync(name);
         

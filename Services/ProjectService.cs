@@ -7,6 +7,7 @@ using JWT_Implementation.EnvironmentSettings;
 using JWT_Implementation.Exceptions;
 using JWT_Implementation.Services.Interfaces;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace JWT_Implementation.Services;
 
@@ -37,13 +38,20 @@ public class ProjectService : IProjectService
             throw new ProjectTypeNotFoundException();
         }
 
+
         var addedProject = await connection.ExecuteAsync(
             "INSERT INTO Projects (ProjectName, ProjectKey, ProjectType, ProjectDescription) values (@ProjectName, @ProjectKey, @ProjectType, @ProjectDescription)",
             newProject);
 
-
+        //Ovo ne valja --> Treba promijeniti implementaciju
         var projectId = connection.Query<int>("SELECT TOP 1 Id FROM Projects ORDER BY Id DESC;").Single();
 
+        //DEFAULT CREATION OF TICKET STAGES
+        var addingTicketStages = await connection.ExecuteAsync(
+        $"INSERT INTO TicketStage (StageName, ProjectId) VALUES ('TO DO', {projectId}), ('IN PROGRESS', {projectId}), ('DONE', {projectId}) "
+            );
+        
+        
         var addedRelation =
             await connection.ExecuteAsync(
                 "INSERT INTO UsersProjectsRelation (UserId, ProjectId) values (@UserId, @ProjectId)",
@@ -52,13 +60,19 @@ public class ProjectService : IProjectService
         return newProject;
     }
 
-    public async Task<IEnumerable<dynamic>> GetAllProjectsAsync(string name)
+    public async Task<IEnumerable<dynamic>> GetAllProjectsAsync(string? name)
     {
         using var connection = CreateSqlConnection();
 
-        var allProjects = await connection.QueryAsync($"SELECT * FROM Projects WHERE ProjectName LIKE '%{name}%'");
+        if (!name.IsNullOrEmpty())
+        {
+            var allProjects = await connection.QueryAsync($"SELECT * FROM Projects WHERE ProjectName LIKE '%{name}%'");
 
-        return allProjects;
+            return allProjects;
+            
+        }
+
+        return await connection.QueryAsync("SELECT * FROM Projects");
     }
 
     public async Task<IEnumerable<dynamic>> GetUserProjectsAsync(string callerid)
