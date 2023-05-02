@@ -145,4 +145,35 @@ public class ProjectsController : ControllerBase
         }
     }
 
+    [HttpPut("UpdateUserProjectRole/{projectId}")]
+    [Authorize]
+    public async Task<ActionResult<int>> UpdateUserProjectRoleAsync(int projectId, UpdateProjectRoleDto updateProjectRoleDto)
+    {
+        try
+        {
+            
+
+            return Ok(await _projectService.UpdateUserProjectRoleAsync(User.FindFirst(ClaimTypes.NameIdentifier)?.Value!,
+                projectId, updateProjectRoleDto));
+
+        }
+        catch (UserNotOnProjectException e)
+        {
+            return Unauthorized(e.Message);
+        }
+        catch (UserNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (ProjectNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+
+        catch (UnauthorizedAccessException e)
+        {
+            return Unauthorized(e.Message);
+        }
+    }
+
 }

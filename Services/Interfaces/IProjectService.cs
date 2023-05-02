@@ -17,4 +17,6 @@ public interface IProjectService
 
     Task<int> AddUserToProjectAsync(int id, string callerId, int projectId);
 
+    Task<int> UpdateUserProjectRoleAsync(string callerId, int projectId, UpdateProjectRoleDto updateProjectRoleDto);
+
 }

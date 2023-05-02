@@ -196,6 +196,55 @@ public class ProjectService : IProjectService
         return addUserToProject;
     }
 
+    //Da li ići u ovaj servis?
+    public async Task<int> UpdateUserProjectRoleAsync(string callerId, int projectId, UpdateProjectRoleDto updateProjectRoleDto)
+    {
+        using var connection = CreateSqlConnection();
+        
+        //CHECKS IF THE CALLER OF THE ENDPOINT IS ON THE PROJECT
+        var checkIfUserOnProject = await connection.QueryFirstOrDefaultAsync<UserProjectRelation>($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{Int32.Parse(callerId)}' AND ProjectId = '{projectId}'");
+
+        if (checkIfUserOnProject is null)
+        {
+            throw new UserNotOnProjectException("Unauthorized acess");
+        }
+        
+        //OVO MOŽE U GORNJI USLOV SVE ZAJEDNO
+        //CHECK IF THE CALLER OF THE ENDPOINT IS AN ADMIN ON THE PROJECT
+        if (checkIfUserOnProject.ProjectRole is Role.User)
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
+        //CHECK IF USER TO UPDATE A ROLE IS ON THE PROJECT
+        var checkIfUserToUpdateARoleOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT UserId FROM UsersProjectsRelation WHERE UserId = '{updateProjectRoleDto.UserId}' AND ProjectId = '{projectId}'");
+        if (checkIfUserToUpdateARoleOnProject is null)
+        {
+            throw new UserNotOnProjectException();
+        }
+        //CHECKS IF USER EXISTS
+        var checkIfUserExists = await connection.QueryFirstOrDefaultAsync($"SELECT Users.Id FROM Users WHERE Id = '{updateProjectRoleDto.UserId}'");
+        if (checkIfUserExists is null)
+        {
+            throw new UserNotFoundException("User does not exist!");
+        }
+        
+        //CHECKS IF PROJECT EXISTS //MOGUĆE DA JE VIŠKA QUERY!!
+        var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync($"SELECT Projects.Id FROM Projects WHERE Id = '{projectId}'");
+        if (checkIfProjectExists is null)
+        {
+            throw new ProjectNotFoundException();
+        }
+        
+        
+        var newRole = updateProjectRoleDto.RoleToUpdate == Role.Admin ? 0 : 1;
+
+        var updateProjectRole = await connection.ExecuteAsync($"UPDATE UsersProjectsRelation SET ProjectRole = '{newRole}'  WHERE UserId = '{updateProjectRoleDto.UserId}' AND ProjectId = '{projectId}'");
+
+        return updateProjectRole;
+    }
+
+
     private SqlConnection CreateSqlConnection()
     {
         return new SqlConnection(_options.DefaultConnection);
