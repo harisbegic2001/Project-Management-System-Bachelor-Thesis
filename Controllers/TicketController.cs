@@ -82,7 +82,7 @@ public class TicketController : ControllerBase
     }
 
     [Authorize]
-    [HttpDelete("{ticketId}")]
+    [HttpPut("delete/{ticketId}")]
     public async Task<ActionResult<int>> DeleteTicketAsync(int ticketId)
     {
         try

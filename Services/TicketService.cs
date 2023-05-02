@@ -85,11 +85,12 @@ public class TicketService : ITicketService
             TicketReporter = creatorUserName, //Vjerovatno neće trebati
             UserId = createTicketDto.Asignee, 
             ProjectId = projectId,
-            TicketStageId = firstTicketStageId
+            TicketStageId = firstTicketStageId,
+            IsValid = true
         };
 
 
-        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId, TicketStageId) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId, @TicketStageId)", newTicket);
+        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId, TicketStageId, IsValid) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId, @TicketStageId, @IsValid)", newTicket);
 
         var readTicket = new ReadTicketDto
         {
@@ -125,7 +126,7 @@ public class TicketService : ITicketService
             throw new UserNotOnProjectException("Unauthorized acess");
         }
 
-        var ticketsOnProject = await connection.QueryAsync<ReadTicketDto>($"SELECT * FROM Tickets WHERE Tickets.ProjectId = '{projectId}'");
+        var ticketsOnProject = await connection.QueryAsync<ReadTicketDto>($"SELECT * FROM Tickets WHERE Tickets.ProjectId = '{projectId}' AND Tickets.IsValid = '1'");
 
 
         return ticketsOnProject;
@@ -202,9 +203,10 @@ public class TicketService : ITicketService
             throw new UserNotOnProjectException("Unauthorized");
         }
 
-        var deletedProject = await connection.ExecuteAsync($"DELETE FROM Tickets WHERE Id = '{ticketId}'");
+        var ticketTODeactivate = await connection.ExecuteAsync($"UPDATE Tickets SET IsValid = '0' WHERE Id = '{ticketId}'");
+       // var deletedProject = await connection.ExecuteAsync($"DELETE FROM Tickets WHERE Id = '{ticketId}'");
 
-        return deletedProject;
+        return ticketTODeactivate;
 
     }
 

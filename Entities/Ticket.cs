@@ -25,4 +25,6 @@ public class Ticket
 
     public int TicketStageId { get; set; }
 
+    public bool IsValid { get; set; }
+
 }
