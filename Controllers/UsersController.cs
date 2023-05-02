@@ -40,6 +40,13 @@ public class UsersController : ControllerBase
     {
         using var connection = CreateSqlConnection();
 
+        var numberOfUsersWithCertainEmail = await connection.QueryFirstOrDefaultAsync<int>($"SELECT COUNT(*) as count FROM Users WHERE email = '{userDto.Email}'");
+
+        if (numberOfUsersWithCertainEmail > 0)
+        {
+            return BadRequest("User with this email already exists!!");
+        }
+        
         using var hmac = new HMACSHA512();
 
         var newUser = new User
