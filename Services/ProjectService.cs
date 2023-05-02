@@ -54,8 +54,8 @@ public class ProjectService : IProjectService
         
         var addedRelation =
             await connection.ExecuteAsync(
-                "INSERT INTO UsersProjectsRelation (UserId, ProjectId) values (@UserId, @ProjectId)",
-                new { @ProjectId = projectId, @UserId = Int32.Parse(callerId) });
+                "INSERT INTO UsersProjectsRelation (UserId, ProjectId, ProjectRole) values (@UserId, @ProjectId, @ProjectRole)",
+                new { @ProjectId = projectId, @UserId = Int32.Parse(callerId), @ProjectRole = Role.Admin });
 
         return newProject;
     }
@@ -155,11 +155,17 @@ public class ProjectService : IProjectService
         using var connection = CreateSqlConnection();
         
         //CHECKS IF THE CALLER OF THE ENDPOINT IS ON THE PROJECT
-        var checkIfUserOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{Int32.Parse(callerId)}' AND ProjectId = '{projectId}'");
+        var checkIfUserOnProject = await connection.QueryFirstOrDefaultAsync<UserProjectRelation>($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{Int32.Parse(callerId)}' AND ProjectId = '{projectId}'");
 
         if (checkIfUserOnProject is null)
         {
             throw new UserNotOnProjectException("Unauthorized acess");
+        }
+        
+        //CHECK IF THE CALLER OF THE ENDPOINT IS AN ADMIN ON THE PROJECT
+        if (checkIfUserOnProject.ProjectRole is Role.User)
+        {
+            throw new UnauthorizedAccessException();
         }
         
         //CHECKS IF USER EXISTS
@@ -184,8 +190,8 @@ public class ProjectService : IProjectService
         }
         
         //ADDING USER TO PROJECT
-        var addUserToProject = await connection.ExecuteAsync("INSERT INTO UsersProjectsRelation (UserId, ProjectId) values (@UserId, @ProjectId)",
-            new { @ProjectId = projectId, @UserId = id });
+        var addUserToProject = await connection.ExecuteAsync("INSERT INTO UsersProjectsRelation (UserId, ProjectId, ProjectRole) values (@UserId, @ProjectId, @ProjectRole)",
+            new { @ProjectId = projectId, @UserId = id, @ProjectRole = Role.User });
 
         return addUserToProject;
     }

@@ -165,6 +165,7 @@ public class UsersController : ControllerBase
 
 
     [HttpGet("GetUsersOnProject")]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<User>>> GetAllUsersOnProjectAsync(int projectId)
     {
         using var connection = CreateSqlConnection();

@@ -118,7 +118,8 @@ public class ProjectsController : ControllerBase
     {
         try
         {
-            var addUserToProject = await _projectService.AddUserToProjectAsync(id:userId, callerId: User.FindFirst(ClaimTypes.NameIdentifier)?.Value!, projectId:projectIdentifier);
+            var addUserToProject = await _projectService.AddUserToProjectAsync(id: userId,
+                callerId: User.FindFirst(ClaimTypes.NameIdentifier)?.Value!, projectId: projectIdentifier);
             return Ok(addUserToProject);
 
         }
@@ -137,6 +138,10 @@ public class ProjectsController : ControllerBase
         catch (UserAlreadyOnProjectException e)
         {
             return BadRequest(e.Message);
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            return Unauthorized(e.Message);
         }
     }
 

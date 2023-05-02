@@ -6,4 +6,6 @@ public class UserProjectRelation
     
     public int ProjectId { get; set; }
 
+    public Role ProjectRole { get; set; }
+
 }
