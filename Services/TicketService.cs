@@ -107,7 +107,7 @@ public class TicketService : ITicketService
 
     }
 
-    public async Task<IEnumerable<ReadTicketDto>> GetAllProjectTicketsAsync(int projectId, string callerId)
+    public async Task<IEnumerable<dynamic>> GetAllProjectTicketsAsync(int projectId, string callerId)
     {
         using var connection = CreateSqlConnection();
         
@@ -126,10 +126,10 @@ public class TicketService : ITicketService
             throw new UserNotOnProjectException("Unauthorized acess");
         }
 
-        var ticketsOnProject = await connection.QueryAsync<ReadTicketDto>($"SELECT * FROM Tickets WHERE Tickets.ProjectId = '{projectId}' AND Tickets.IsValid = '1'");
+        var ticketsWithStages = await connection.QueryAsync("SELECT TicketStage.StageName, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter FROM TicketStage INNER JOIN Tickets ON TicketStage.Id = Tickets.TicketStageId");
 
 
-        return ticketsOnProject;
+        return ticketsWithStages;
     }
 
     public async Task<IEnumerable<dynamic>> GetAllTicketsAssignedToUserAsync(string callerId)

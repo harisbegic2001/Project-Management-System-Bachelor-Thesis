@@ -6,7 +6,7 @@ public interface ITicketService
 {
     Task<ReadTicketDto> CreateTicketAsync(CreateTicketDto createTicketDto, string callerId, int projectId);
 
-    Task<IEnumerable<ReadTicketDto>> GetAllProjectTicketsAsync(int projectId, string callerId);
+    Task<IEnumerable<dynamic>> GetAllProjectTicketsAsync(int projectId, string callerId);
 
     Task<IEnumerable<dynamic>> GetAllTicketsAssignedToUserAsync(string callerId);
 
