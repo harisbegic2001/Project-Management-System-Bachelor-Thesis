@@ -42,6 +42,7 @@ builder.Services.AddTransient<ITicketService, TicketService>();
 builder.Services.AddTransient<ICommentService, CommentService>();
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddScoped<ITicketStageService, TicketStageService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 

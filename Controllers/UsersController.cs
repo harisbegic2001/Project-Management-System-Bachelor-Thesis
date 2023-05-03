@@ -20,15 +20,12 @@ namespace JWT_Implementation.Controllers;
 [ApiController]
 public class UsersController : ControllerBase
 {
-    private readonly ConnectionStrings _options;
-    private readonly ITokenService _tokenService;
-    private readonly IEmailService _emailService;
 
-    public UsersController(IOptions<ConnectionStrings> options, ITokenService tokenService, IEmailService emailService)
+    private readonly IUserService _userService;
+
+    public UsersController(IUserService userService)
     {
-        _options = options.Value;
-        _tokenService = tokenService;
-        _emailService = emailService;
+        _userService = userService;
     }
 
     /// <summary>
@@ -38,129 +35,63 @@ public class UsersController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<ReadUserDto>> RegisterUserAsync(UserDto userDto)
     {
-        using var connection = CreateSqlConnection();
-
-        var numberOfUsersWithCertainEmail = await connection.QueryFirstOrDefaultAsync<int>($"SELECT COUNT(*) as count FROM Users WHERE email = '{userDto.Email}'");
-
-        if (numberOfUsersWithCertainEmail > 0)
+        try
         {
-            return BadRequest("User with this email already exists!!");
+            var registeredUser = await _userService.RegisterUserAsync(userDto);
+            return Ok(registeredUser);
         }
-        
-        using var hmac = new HMACSHA512();
-
-        var newUser = new User
+        catch (UserAlreadyExistsException e)
         {
-            Id = 0, //Izbaciti 
-            FirstName = userDto.FirstName,
-            LastName = userDto.LastName,
-            Occupation = userDto.Occupation,
-            Username = userDto.FirstName + userDto.LastName, //Mislim da i ovo treba izmijeniti
-            PasswordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(userDto.Password!)),
-            PasswordSalt = hmac.Key,
-            AppRole = Role.User,
-            Email = userDto.Email,
-
-        };
-
-        if (String.IsNullOrWhiteSpace(newUser.FirstName) || String.IsNullOrWhiteSpace(newUser.LastName))
-        {
-            return BadRequest("One or more fields are empty!");
+            return BadRequest(e.Message);
         }
-
-        var checkUserId = newUser.Id;
-
-        var newHero = await connection.ExecuteAsync(
-            "insert into Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email) values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email)",
-            newUser);
-
-        _emailService.SendLinkEmailAsync(newUser.Email!);
-        
-        return Ok(new ReadUserDto
+        catch (InvalidDataException e)
         {
-            Email = newUser.Email,
-            Token = _tokenService.CreateToken(newUser) //Neće trebati 
-        });
+            return BadRequest(e.Message);
+        }
     }
 
 
     [HttpPost("login")]
     public async Task<ActionResult<ReadUserDto>> LoginUserAsync(LoginDto loginDto)
     {
-        using var connection = CreateSqlConnection();
-
-        var existingUser =
-            await connection.QueryFirstOrDefaultAsync<User>($"SELECT * FROM Users WHERE Email = '{loginDto.Email}'");
-
-        if (existingUser is null)
+        try
         {
-            return Unauthorized("Invalid Username or Password");
+            var loggedUser = await _userService.LoginUserAsync(loginDto);
+
+            return Ok(loggedUser);
         }
-
-        using var hmac = new HMACSHA512(existingUser.PasswordSalt!);
-
-        var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(loginDto.Password!));
-
-        for (int i = 0; i < computedHash.Length; i++)
+        catch (InvalidUserNameOrPasswordException e)
         {
-            if (computedHash[i] != existingUser.PasswordHash![i])
-            {
-                return Unauthorized("Invalid Username or Password");
-            }
+            return Unauthorized(e.Message);
         }
-
-        return Ok(new ReadUserDto
-        {
-            Email = existingUser.Email,
-            Token = _tokenService.CreateToken(existingUser),
-        });
     }
 
 
     [Authorize(Roles = nameof(Role.Admin))]
     [HttpGet]
-    public async Task<ActionResult<List<User>>> GetUsersAsync()
+    public async Task<ActionResult<IEnumerable<User>>> GetUsersAsync()
     {
-        using var connection = CreateSqlConnection();
-
-        var users = await connection.QueryAsync("SELECT * FROM Users");
-
-        return Ok(users);
+        
+        return Ok( await _userService.GetUsersAsync());
     }
 
     [HttpPut]
     [Authorize(Roles = nameof(Role.Admin))]
-    public async Task<ActionResult<User>> UpdateUserRoleAsync(int id, string role)
+    public async Task<ActionResult> UpdateUserRoleAsync(int id, string role)
     {
-        using var connection = CreateSqlConnection();
-
-
-       var role2 = HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Role)?.Value;
-       
-        var updatedUser = await connection.QueryFirstOrDefaultAsync("SELECT * FROM Users WHERE Id = @Id", new
+        try
         {
-            Id = id
-        });
-
-        if (updatedUser is null)
-        {
-            throw new UserNotFoundException("User not found");
+            await _userService.UpdateUserRoleAsync(id, role);
+            return Ok();
         }
-
-        if (!RoleConstants.AvailableRoles.Contains(role.ToLower()))
+        catch (UserNotFoundException e)
         {
-            throw new RoleNotFoundException("Role does not exist");
+            return NotFound(e.Message);
         }
-
-        var newRole = role.ToLower() == nameof(Role.Admin).ToLower() ? 0 : 1;
-
-        var updateRole = await connection.QueryAsync("UPDATE Users SET AppRole = @AppRole WHERE Id = @Id", new
+        catch (RoleNotFoundException e)
         {
-            AppRole = newRole,
-            Id = id
-        });
-
-        return Ok(role2);
+            return NotFound(e.Message);
+        }
     }
 
 
@@ -168,16 +99,10 @@ public class UsersController : ControllerBase
     [Authorize]
     public async Task<ActionResult<IEnumerable<User>>> GetAllUsersOnProjectAsync(int projectId)
     {
-        using var connection = CreateSqlConnection();
-
-        var usersOnProject = await connection.QueryAsync($"SELECT Users.Id, Users.FirstName, Users.LastName, Users.Username, Users.Occupation, Projects.ProjectName FROM Users JOIN UsersProjectsRelation ON Users.Id = UsersProjectsRelation.UserId JOIN Projects ON UsersProjectsRelation.ProjectId = Projects.Id WHERE Projects.Id = '{projectId}'");
-
+           
+        var usersOnProject = await _userService.GetAllUsersOnProjectAsync(projectId);
         return Ok(usersOnProject);
-    }
 
-
-    private SqlConnection CreateSqlConnection()
-    {
-        return new SqlConnection(_options.DefaultConnection);
+   
     }
 }
