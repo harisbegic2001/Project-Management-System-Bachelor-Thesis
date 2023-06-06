@@ -74,7 +74,7 @@ if (app.Environment.IsDevelopment())
 //Custom exception Middleware (GLOBAL ERROR HANDLING)
 app.ConfigureExceptionMiddleware();
 app.UseHttpsRedirection();
-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("https://localhost:4200"));
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200"));
 app.UseAuthentication(); //Do you have a Valid Token?
 app.UseAuthorization(); //After It is known that we have a valid token what are we allowed to do with this token
 app.MapControllers();

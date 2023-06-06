@@ -70,6 +70,7 @@ public class UserService : IUserService
         
         return new ReadUserDto
         {
+            Id = newUser.Id,
             Email = newUser.Email,
             Token = _tokenService.CreateToken(newUser) //Neće trebati 
         };

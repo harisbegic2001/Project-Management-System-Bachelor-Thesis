@@ -75,15 +75,15 @@ public class ProjectService : IProjectService
         return await connection.QueryAsync("SELECT * FROM Projects");
     }
 
-    public async Task<IEnumerable<dynamic>> GetUserProjectsAsync(string callerid)
+    public async Task<IEnumerable<Project>> GetUserProjectsAsync(string callerid)
     {
         using var connection = CreateSqlConnection();
 
         var provjeraCallera = callerid;
 
         var singleUserProjects = await
-            connection.QueryAsync(
-                $"SELECT Projects.ProjectName, Projects.ProjectKey, Projects.ProjectType, Projects.ProjectDescription, Users.Username FROM Projects JOIN UsersProjectsRelation ON Projects.Id = UsersProjectsRelation.ProjectId JOIN Users ON Users.Id = UsersProjectsRelation.UserId WHERE UserId = '{callerid}'");
+            connection.QueryAsync<Project>(
+                $"SELECT Projects.Id, Projects.ProjectName, Projects.ProjectKey, Projects.ProjectType, Projects.ProjectDescription, Users.Username FROM Projects JOIN UsersProjectsRelation ON Projects.Id = UsersProjectsRelation.ProjectId JOIN Users ON Users.Id = UsersProjectsRelation.UserId WHERE UserId = '{callerid}'");
 
         return singleUserProjects;
     }

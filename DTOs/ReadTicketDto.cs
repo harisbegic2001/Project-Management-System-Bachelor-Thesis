@@ -15,4 +15,6 @@ public class ReadTicketDto
     public string? TicketKey { get; set; }
 
     public string? TicketProject { get; set; }
+
+    public int? UserId { get; set; }
 }

@@ -126,7 +126,7 @@ public class TicketService : ITicketService
             throw new UserNotOnProjectException("Unauthorized acess");
         }
 
-        var ticketsWithStages = await connection.QueryAsync("SELECT TicketStage.StageName, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter FROM TicketStage INNER JOIN Tickets ON TicketStage.Id = Tickets.TicketStageId");
+        var ticketsWithStages = await connection.QueryAsync($"SELECT TicketStage.StageName, Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter FROM TicketStage INNER JOIN Tickets ON TicketStage.Id = Tickets.TicketStageId WHERE Tickets.ProjectId = '{projectId}'");
 
 
         return ticketsWithStages;
@@ -136,7 +136,7 @@ public class TicketService : ITicketService
     {
         using var connection = CreateSqlConnection();
         
-        var ticketsOnProject = await connection.QueryAsync($"SELECT Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketTask, Tickets.TicketReporter, Projects.ProjectName  FROM Tickets JOIN Projects ON Tickets.ProjectId = Projects.Id WHERE Tickets.UserId = '{Int32.Parse(callerId)}'");
+        var ticketsOnProject = await connection.QueryAsync($"SELECT Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketType, Projects.ProjectName  FROM Tickets JOIN Projects ON Tickets.ProjectId = Projects.Id WHERE Tickets.UserId = '{Int32.Parse(callerId)}'");
 
         return ticketsOnProject;
     }
@@ -210,9 +210,13 @@ public class TicketService : ITicketService
 
     }
 
-    public Task<dynamic> GetTicketByIdAsync(int ticketId)
+    public  async Task<ReadTicketDto> GetTicketByIdAsync(int ticketId, string callerId)
     {
-        throw new NotImplementedException();
+        using var connection = CreateSqlConnection();
+
+        var getSpecifiedTicket = await connection.QueryFirstOrDefaultAsync<ReadTicketDto>($"SELECT Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter, Tickets.UserId FROM Tickets");
+
+        return getSpecifiedTicket;
     }
 
     private SqlConnection CreateSqlConnection()

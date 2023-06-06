@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JWT_Implementation.DTOs;
+using JWT_Implementation.Entities;
 using JWT_Implementation.Exceptions;
 using JWT_Implementation.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -30,7 +31,7 @@ public class TicketController : ControllerBase
     }
 
 
-    [HttpGet("GetTicketsOnProject")]
+    [HttpGet("GetTicketsOnProject/{projectIdentifier}")]
     [Authorize]
     public async Task<ActionResult<IEnumerable<ReadTicketDto>>> GetAllTicketsOProjectAsync(int projectIdentifier)
     {
@@ -99,6 +100,24 @@ public class TicketController : ControllerBase
             return Unauthorized(e.Message);
         }
         
+    }
+
+    [Authorize]
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ReadTicketDto>> GetTicektById(int id)
+    {
+        try
+        {
+            var ticket =  await _ticketService.GetTicketByIdAsync(id, User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            return Ok(ticket);
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 
 

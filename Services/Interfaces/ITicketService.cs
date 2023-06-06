@@ -1,4 +1,5 @@
 using JWT_Implementation.DTOs;
+using JWT_Implementation.Entities;
 
 namespace JWT_Implementation.Services.Interfaces;
 
@@ -14,6 +15,6 @@ public interface ITicketService
 
     Task<int> DeleteTicketAsync(int ticketId, string callerId);
     
-    Task<dynamic> GetTicketByIdAsync(int ticketId);
+    Task<ReadTicketDto> GetTicketByIdAsync(int ticketId, string callerId);
 
 }

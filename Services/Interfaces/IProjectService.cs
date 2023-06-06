@@ -9,7 +9,7 @@ public interface IProjectService
 
     Task<IEnumerable<dynamic>> GetAllProjectsAsync(string name);
 
-    Task<IEnumerable<dynamic>> GetUserProjectsAsync(string callerid);
+    Task<IEnumerable<Project>> GetUserProjectsAsync(string callerid);
 
     Task<int> UpdateProjectAsync(UpdateProjectDto updateProjectDto, int id, string callerId);
 
