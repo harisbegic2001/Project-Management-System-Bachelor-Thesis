@@ -83,7 +83,7 @@ public class TicketController : ControllerBase
     }
 
     [Authorize]
-    [HttpPut("delete/{ticketId}")]
+    [HttpDelete("{ticketId}")]
     public async Task<ActionResult<int>> DeleteTicketAsync(int ticketId)
     {
         try
@@ -113,10 +113,9 @@ public class TicketController : ControllerBase
             return Ok(ticket);
 
         }
-        catch (Exception e)
+        catch (UnauthorizedAccessException e)
         {
-            Console.WriteLine(e);
-            throw;
+            return BadRequest(e.Message);
         }
     }
 

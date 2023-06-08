@@ -60,7 +60,7 @@ public class CommentService : ICommentService
             throw new TicketNotFoundException();
         }
 
-        var ticketComments = await connection.QueryAsync($"SELECT Users.Firstname, Users.Lastname, Comments.CommentSource, Comments.DateOfCreation FROM Users JOIN Comments ON Users.Id = Comments.CreatorId WHERE Comments.TicketId = '{ticketId}'");
+        var ticketComments = await connection.QueryAsync($"SELECT Users.Firstname, Users.Lastname, Comments.Id, Comments.CommentSource, Comments.DateOfCreation FROM Users JOIN Comments ON Users.Id = Comments.CreatorId WHERE Comments.TicketId = '{ticketId}'");
 
         return ticketComments;
     }

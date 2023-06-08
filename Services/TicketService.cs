@@ -81,7 +81,7 @@ public class TicketService : ITicketService
             TicketKey = ticketName,
             TicketDescription = createTicketDto.TicketDescription,
             TicketPriority = createTicketDto.TicketPriority,
-            TicketTask = createTicketDto.TicketType,
+            TicketType = createTicketDto.TicketType,
             TicketReporter = creatorUserName, //Vjerovatno neće trebati
             UserId = createTicketDto.Asignee, 
             ProjectId = projectId,
@@ -97,7 +97,7 @@ public class TicketService : ITicketService
             TicketName = newTicket.TicketName,
             TicketDescription = newTicket.TicketDescription,
             TicketPriority = newTicket.TicketPriority,
-            TicketTask = newTicket.TicketTask,
+            TicketType = newTicket.TicketType,
             TicketReporter = newTicket.TicketReporter,
             TicketKey = newTicket.TicketKey,
             TicketProject = projectName
@@ -126,7 +126,7 @@ public class TicketService : ITicketService
             throw new UserNotOnProjectException("Unauthorized acess");
         }
 
-        var ticketsWithStages = await connection.QueryAsync($"SELECT TicketStage.StageName, Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter FROM TicketStage INNER JOIN Tickets ON TicketStage.Id = Tickets.TicketStageId WHERE Tickets.ProjectId = '{projectId}'");
+        var ticketsWithStages = await connection.QueryAsync($"SELECT TicketStage.StageName, Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter FROM TicketStage INNER JOIN Tickets ON TicketStage.Id = Tickets.TicketStageId WHERE Tickets.ProjectId = '{projectId}' AND Tickets.IsValid = '1'");
 
 
         return ticketsWithStages;
@@ -179,7 +179,7 @@ public class TicketService : ITicketService
         }
         
 
-        var updatedTicket = await connection.ExecuteAsync($"UPDATE Tickets SET TicketName = '{updateTicketDto.TicketName}', TicketDescription = '{updateTicketDto.TicketDescription}', TicketPriority = '{updateTicketDto.TicketPriority}', TicketType = '{updateTicketDto.TicketType}', TicketReporter = '{updateTicketDto.TicketReporter}', UserId = '{updateTicketDto.UserId}', TicketStageId = '{updateTicketDto.TicketStageId}' WHERE Id = '{ticketId}'");
+        var updatedTicket = await connection.ExecuteAsync($"UPDATE Tickets SET TicketName = '{updateTicketDto.TicketName}', TicketDescription = '{updateTicketDto.TicketDescription}', TicketPriority = '{updateTicketDto.TicketPriority}', TicketType = '{updateTicketDto.TicketType}', UserId = '{updateTicketDto.TicketReporterId}', TicketStageId = '{updateTicketDto.TicketStageId}' WHERE Id = '{ticketId}'");
 
         return updatedTicket;
 
@@ -204,7 +204,6 @@ public class TicketService : ITicketService
         }
 
         var ticketTODeactivate = await connection.ExecuteAsync($"UPDATE Tickets SET IsValid = '0' WHERE Id = '{ticketId}'");
-       // var deletedProject = await connection.ExecuteAsync($"DELETE FROM Tickets WHERE Id = '{ticketId}'");
 
         return ticketTODeactivate;
 
@@ -214,8 +213,12 @@ public class TicketService : ITicketService
     {
         using var connection = CreateSqlConnection();
 
-        var getSpecifiedTicket = await connection.QueryFirstOrDefaultAsync<ReadTicketDto>($"SELECT Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter, Tickets.UserId FROM Tickets");
+        var getSpecifiedTicket = await connection.QueryFirstOrDefaultAsync<ReadTicketDto>($"SELECT Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketPriority, Tickets.TicketType, Tickets.TicketReporter, Tickets.UserId FROM Tickets WHERE Tickets.Id = '{ticketId}'");
 
+        if (getSpecifiedTicket.UserId != Int32.Parse(callerId) )
+        {
+            throw new UnauthorizedAccessException();
+        }
         return getSpecifiedTicket;
     }
 

@@ -8,7 +8,7 @@ public class ReadTicketDto
 
     public string? TicketPriority { get; set; }
 
-    public string? TicketTask { get; set; }
+    public string? TicketType { get; set; }
 
     public string? TicketReporter { get; set; }
     

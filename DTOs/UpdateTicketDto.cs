@@ -9,10 +9,8 @@ public class UpdateTicketDto
     public string? TicketPriority { get; set; }
 
     public string? TicketType { get; set; }
-
-    public string? TicketReporter { get; set; }
-
-    public int UserId { get; set; }
+    
+    public int TicketReporterId { get; set; }
 
     public int TicketStageId { get; set; }
 }
