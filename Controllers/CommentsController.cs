@@ -19,12 +19,12 @@ public class CommentsController : ControllerBase
     }
 
     [Authorize]
-    [HttpPost]
-    public async Task<ActionResult> CreateCommentAsync(CreateCommentDto createCommentDto)
+    [HttpPost("{ticketId}")]
+    public async Task<ActionResult> CreateCommentAsync(CreateCommentDto createCommentDto, int ticketId)
     {
         try
         {  
-            var createdComment = await _commentService.CreateCommentAsync(createCommentDto, User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var createdComment = await _commentService.CreateCommentAsync(createCommentDto, ticketId, User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             return Ok(createdComment);
         }
         catch (TicketNotFoundException)

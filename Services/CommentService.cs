@@ -21,11 +21,11 @@ public class CommentService : ICommentService
     
     
     
-    public async Task<ReadCommentDto> CreateCommentAsync(CreateCommentDto createCommentDto, string callerId)
+    public async Task<ReadCommentDto> CreateCommentAsync(CreateCommentDto createCommentDto, int ticketId, string callerId)
     {
         using var connection = CreateSqlConnection();
 
-        var checkIfTicketExists = await connection.QueryFirstOrDefaultAsync($"SELECT Tickets.Id FROM Tickets WHERE Id = '{createCommentDto.TicketId}'");
+        var checkIfTicketExists = await connection.QueryFirstOrDefaultAsync($"SELECT Tickets.Id FROM Tickets WHERE Id = '{ticketId}'");
         if (checkIfTicketExists is null)
         {
             throw new TicketNotFoundException();
@@ -35,7 +35,7 @@ public class CommentService : ICommentService
         {
             CommentSource = createCommentDto.CommentSource,
             DateOfCreation = DateTime.Now,
-            TicketId = createCommentDto.TicketId,
+            TicketId = ticketId,
             CreatorId = Int32.Parse(callerId)
         };
 

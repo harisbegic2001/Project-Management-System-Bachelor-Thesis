@@ -5,7 +5,7 @@ namespace JWT_Implementation.Services.Interfaces;
 
 public interface ICommentService
 {
-    Task<ReadCommentDto> CreateCommentAsync(CreateCommentDto createCommentDto, string callerId);
+    Task<ReadCommentDto> CreateCommentAsync(CreateCommentDto createCommentDto, int ticketId , string callerId);
 
     Task<IEnumerable<dynamic>> GetCommentsByTicketAsync(int ticketId);
 

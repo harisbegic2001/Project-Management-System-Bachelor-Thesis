@@ -90,7 +90,7 @@ public class TicketService : ITicketService
         };
 
 
-        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId, TicketStageId, IsValid) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketTask, @TicketReporter, @UserId, @ProjectId, @TicketStageId, @IsValid)", newTicket);
+        var createTicket = await connection.ExecuteAsync("INSERT INTO Tickets (TicketName, TicketKey, TicketDescription, TicketPriority, TicketType, TicketReporter, UserId, ProjectId, TicketStageId, IsValid) VALUES (@TicketName, @TicketKey, @TicketDescription, @TicketPriority, @TicketType, @TicketReporter, @UserId, @ProjectId, @TicketStageId, @IsValid)", newTicket);
 
         var readTicket = new ReadTicketDto
         {
@@ -136,7 +136,7 @@ public class TicketService : ITicketService
     {
         using var connection = CreateSqlConnection();
         
-        var ticketsOnProject = await connection.QueryAsync($"SELECT Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketType, Projects.ProjectName  FROM Tickets JOIN Projects ON Tickets.ProjectId = Projects.Id WHERE Tickets.UserId = '{Int32.Parse(callerId)}'");
+        var ticketsOnProject = await connection.QueryAsync($"SELECT Tickets.Id, Tickets.TicketName, Tickets.TicketKey, Tickets.TicketDescription, Tickets.TicketType, Projects.ProjectName  FROM Tickets JOIN Projects ON Tickets.ProjectId = Projects.Id WHERE Tickets.UserId = '{Int32.Parse(callerId)}'");
 
         return ticketsOnProject;
     }

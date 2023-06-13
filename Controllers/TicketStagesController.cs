@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JWT_Implementation.DTOs;
+using JWT_Implementation.Entities;
 using JWT_Implementation.Exceptions;
 using JWT_Implementation.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -20,13 +21,13 @@ public class TicketStagesController : ControllerBase
         _ticketStageService = ticketStageService;
     }
 
-    [HttpPost]
+    [HttpPost("{projectId}")]
     [Authorize]
-    public async Task<ActionResult> CreateTicketStageAsync(CreateTicketStageDto createTicketStageDto)
+    public async Task<ActionResult> CreateTicketStageAsync(CreateTicketStageDto createTicketStageDto, int projectId)
     {
         try
         {
-            await _ticketStageService.CreateTicketStageAsync(createTicketStageDto, User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
+            await _ticketStageService.CreateTicketStageAsync(createTicketStageDto, projectId, User.FindFirst(ClaimTypes.NameIdentifier)?.Value!);
 
             return Ok();
         }
@@ -37,7 +38,7 @@ public class TicketStagesController : ControllerBase
         
     }
 
-    [HttpPut("{id}")]
+    /*[HttpPut("{id}")]
     [Authorize]
     public async Task<ActionResult<ReadTicekStageDto>> UpdateTicketStageAsync(UpdateTicketStageDto updateTicketStageDto, int id)
     {
@@ -56,7 +57,7 @@ public class TicketStagesController : ControllerBase
         {
             return Unauthorized(e.Message);
         }  
-    }
+    }*/
 
     [HttpDelete("{id}")]
     [Authorize]
@@ -77,4 +78,35 @@ public class TicketStagesController : ControllerBase
         }
     }
 
+    [HttpGet("{projectId}")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<TicketStage>>> GetTicketStagesForProjectAsync(int projectId)
+    {
+        try
+        {
+            var ticketStagesToReturn = await _ticketStageService.GetTicketStagesOnProjectAsync(projectId);
+
+            return Ok(ticketStagesToReturn);
+
+        }
+        catch (Exception e)
+        {
+            return NotFound(e.Message);
+        }
+    }
+
+    [HttpPut("{ticketId}")]
+    [Authorize]
+    public async Task<ActionResult> UpdateTicketCurrentStageAsync(int ticketId,  UpdateTicketCurrentStageDto stageName)
+    {
+        try
+        {
+            await _ticketStageService.UpdateTicketCurrentStageAsync(ticketId, stageName);
+            return Ok();
+        }
+        catch (TicketStageNotFoundException e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

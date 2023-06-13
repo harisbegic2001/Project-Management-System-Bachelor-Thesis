@@ -21,7 +21,7 @@ public class TicketController : ControllerBase
     }
 
 
-    [HttpPost]
+    [HttpPost("{projectId}")]
     [Authorize]
     public async Task<ActionResult<ReadTicketDto>> CreateTicketAsync(CreateTicketDto createTicketDto,  int projectId)
     {
