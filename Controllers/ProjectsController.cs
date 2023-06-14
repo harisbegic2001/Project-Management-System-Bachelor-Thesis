@@ -112,13 +112,13 @@ public class ProjectsController : ControllerBase
         return id;
     }
 
-    [HttpPost("AddUserToProjectAsync")]
+    [HttpPost("AddUserToProjectAsync/{projectIdentifier}")]
     [Authorize]
-    public async Task<ActionResult> AddUserToProjectAsync(int userId, int projectIdentifier)
+    public async Task<ActionResult> AddUserToProjectAsync(AddUserToProjectDto email, int projectIdentifier)
     {
         try
         {
-            var addUserToProject = await _projectService.AddUserToProjectAsync(id: userId,
+            var addUserToProject = await _projectService.AddUserToProjectAsync(email: email,
                 callerId: User.FindFirst(ClaimTypes.NameIdentifier)?.Value!, projectId: projectIdentifier);
             return Ok(addUserToProject);
 

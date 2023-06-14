@@ -95,7 +95,7 @@ public class UsersController : ControllerBase
     }
 
 
-    [HttpGet("GetUsersOnProject")]
+    [HttpGet("GetUsersOnProject/{projectId}")]
     [Authorize]
     public async Task<ActionResult<IEnumerable<User>>> GetAllUsersOnProjectAsync(int projectId)
     {

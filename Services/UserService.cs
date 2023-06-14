@@ -151,7 +151,7 @@ public class UserService : IUserService
     {
         using var connection = CreateSqlConnection();
 
-        var usersOnProject = await connection.QueryAsync<User>($"SELECT Users.Id, Users.FirstName, Users.LastName, Users.Username, Users.Occupation, Projects.ProjectName FROM Users JOIN UsersProjectsRelation ON Users.Id = UsersProjectsRelation.UserId JOIN Projects ON UsersProjectsRelation.ProjectId = Projects.Id WHERE Projects.Id = '{projectId}'");
+        var usersOnProject = await connection.QueryAsync<User>($"SELECT Users.Id, Users.Email, Users.FirstName, Users.LastName, Users.Username, Users.Occupation, Projects.ProjectName FROM Users JOIN UsersProjectsRelation ON Users.Id = UsersProjectsRelation.UserId JOIN Projects ON UsersProjectsRelation.ProjectId = Projects.Id WHERE Projects.Id = '{projectId}'");
 
         return usersOnProject;
 

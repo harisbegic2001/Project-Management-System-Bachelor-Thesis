@@ -150,7 +150,7 @@ public class ProjectService : IProjectService
 
     }
 
-    public async Task<int> AddUserToProjectAsync(int id, string callerId, int projectId)
+    public async Task<int> AddUserToProjectAsync(AddUserToProjectDto email, string callerId, int projectId)
     {
         using var connection = CreateSqlConnection();
         
@@ -169,11 +169,13 @@ public class ProjectService : IProjectService
         }
         
         //CHECKS IF USER EXISTS
-        var checkIfUserExists = await connection.QueryFirstOrDefaultAsync($"SELECT Users.Id FROM Users WHERE Id = '{id}'");
+        var checkIfUserExists = await connection.QueryFirstOrDefaultAsync($"SELECT Users.Email FROM Users WHERE Email = '{email.email}'");
         if (checkIfUserExists is null)
         {
             throw new UserNotFoundException("User does not exist!");
         }
+
+        var userIdToBeAddedId = await connection.QueryFirstOrDefaultAsync<int>($"SELECT Users.Id FROM Users WHERE Email = '{email.email}'");
         
         //CHECKS IF PROJECT EXISTS //MOGUĆE DA JE VIŠKA QUERY!!
         var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync($"SELECT Projects.Id FROM Projects WHERE Id = '{projectId}'");
@@ -183,7 +185,7 @@ public class ProjectService : IProjectService
         }
         
         //CHECKS IF USER ALREADY ON THE PROJECT
-        var checkIfUserAlreadyOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{id}' AND ProjectId = '{projectId}'");
+        var checkIfUserAlreadyOnProject = await connection.QueryFirstOrDefaultAsync($"SELECT * FROM UsersProjectsRelation WHERE UserId = '{userIdToBeAddedId}' AND ProjectId = '{projectId}'");
         if (checkIfUserAlreadyOnProject is not null)
         {
             throw new UserAlreadyOnProjectException();
@@ -191,7 +193,7 @@ public class ProjectService : IProjectService
         
         //ADDING USER TO PROJECT
         var addUserToProject = await connection.ExecuteAsync("INSERT INTO UsersProjectsRelation (UserId, ProjectId, ProjectRole) values (@UserId, @ProjectId, @ProjectRole)",
-            new { @ProjectId = projectId, @UserId = id, @ProjectRole = Role.User });
+            new { @ProjectId = projectId, @UserId = userIdToBeAddedId, @ProjectRole = Role.User });
 
         return addUserToProject;
     }

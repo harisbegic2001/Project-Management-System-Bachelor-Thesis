@@ -15,7 +15,7 @@ public interface IProjectService
 
     Task<int> DeleteProjectAsync(int id, string callerId);
 
-    Task<int> AddUserToProjectAsync(int id, string callerId, int projectId);
+    Task<int> AddUserToProjectAsync(AddUserToProjectDto email, string callerId, int projectId);
 
     Task<int> UpdateUserProjectRoleAsync(string callerId, int projectId, UpdateProjectRoleDto updateProjectRoleDto);
 
