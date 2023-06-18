@@ -10,6 +10,6 @@ public class CreateTicketDto
 
     public string? TicketType { get; set; }
 
-    public int Asignee { get; set; }
+    public string? AsigneeEmail { get; set; }
     
 }

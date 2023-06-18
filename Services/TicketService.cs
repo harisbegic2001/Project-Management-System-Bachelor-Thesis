@@ -75,6 +75,19 @@ public class TicketService : ITicketService
         //ASSIGN TICKET STAGE TO TICKET --> BY DEFAULT LET IT BE THE FIRST AVAILABLE FOR THE PROJECT
         var firstTicketStageId = await connection.QueryFirstOrDefaultAsync<int>($"SELECT TOP 1 Id FROM TicketStage WHERE ProjectId = '{projectId}'");
         
+        
+        // Dodijeljivanje ticketa Asignee-u 1) Provjeriti da li je korisnik uopšte na tom projektu, 
+        
+        var userIdToBeAssgined = await connection.QueryFirstOrDefaultAsync<int>($"SELECT Users.Id FROM Users WHERE Email = '{createTicketDto.AsigneeEmail}'");
+        
+        //Check if user that is to be assigned is on the project
+        var checkIfAsigneeOnTheProject = await connection.QueryFirstOrDefaultAsync($"SELECT UserId FROM UsersProjectsRelation WHERE UserId ='{userIdToBeAssgined}' AND ProjectId='{projectId}'");
+       
+        if (checkIfAsigneeOnTheProject is null)
+        {
+            throw new UserNotOnProjectException();
+        }
+        
         var newTicket = new Ticket
         {
             TicketName = createTicketDto.TicketName,
@@ -82,8 +95,8 @@ public class TicketService : ITicketService
             TicketDescription = createTicketDto.TicketDescription,
             TicketPriority = createTicketDto.TicketPriority,
             TicketType = createTicketDto.TicketType,
-            TicketReporter = creatorUserName, //Vjerovatno neće trebati
-            UserId = createTicketDto.Asignee, 
+            TicketReporter = creatorUserName,
+            UserId = userIdToBeAssgined,
             ProjectId = projectId,
             TicketStageId = firstTicketStageId,
             IsValid = true

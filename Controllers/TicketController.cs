@@ -25,9 +25,30 @@ public class TicketController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ReadTicketDto>> CreateTicketAsync(CreateTicketDto createTicketDto,  int projectId)
     {
-        var createdTicket = await _ticketService.CreateTicketAsync(createTicketDto, User.FindFirst(ClaimTypes.NameIdentifier)!.Value, projectId);
+        try
+        {
+            var createdTicket = await _ticketService.CreateTicketAsync(createTicketDto, User.FindFirst(ClaimTypes.NameIdentifier)!.Value, projectId);
 
-        return Ok(createdTicket);
+            return Ok(createdTicket);
+        }
+        catch (UserNotOnProjectException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (ProjectNotFoundException e)
+        {
+            return NotFound(e.Message);
+        }
+        catch (TicketPriorityDoesNotExistException e)
+        {
+            return BadRequest(e.Message);
+        }
+        catch (TicketTaskDoesNotExistException e)
+        {
+            return BadRequest(e.Message);
+        }
+
+
     }
 
 
