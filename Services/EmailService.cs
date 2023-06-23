@@ -41,11 +41,42 @@ public class EmailService : IEmailService
 
         return  SendEmailAsync(sendEmailRequest);
     }
-    
-    
-    
-    
-    
+
+    public string AddToProjectEmailAsync(AddedToProjectEmailDto addedToProjectEmailDto)
+    {
+        var body =  $"<div>Hi {addedToProjectEmailDto.ReceiverName},</div> <br/>" +
+                    $"<div>You have been Added to  {addedToProjectEmailDto.ProjectName} project</div>" + 
+                    $"<div>{addedToProjectEmailDto.ReporterName} added you to this project</div>" +
+                    "<div> - Admin Team</div>";
+        
+        var sendEmailRequest = new SendEmailRequestDto
+        {
+            Receiver = addedToProjectEmailDto.ReceiverAdress!,
+            Subject = EmailServiceConstants.NewProjectSubject,
+            Body = body,
+        };
+
+        return SendEmailAsync(sendEmailRequest);
+    }
+
+    public string AssignedToTicketEmailAsync(AssignedToTicketEmailDto assignedToTicketEmailDto)
+    {
+        var body =  $"<div>Hi {assignedToTicketEmailDto.ReceiverName},</div> <br/>" +
+                    $"<div>You have been Assigned to new ticket: {assignedToTicketEmailDto.TicketName} on the project: {assignedToTicketEmailDto.ProjectName}.</div>" + 
+                    $"<div>{assignedToTicketEmailDto.ReporterName} assigned you to this ticket</div>" +
+                    "<div> - Admin Team</div>";
+        
+        var sendEmailRequest = new SendEmailRequestDto
+        {
+            Receiver = assignedToTicketEmailDto.ReceiverAdress!,
+            Subject = EmailServiceConstants.NewTicketSubject,
+            Body = body,
+        };
+
+        return SendEmailAsync(sendEmailRequest);
+    }
+
+
     public string SendEmailAsync(SendEmailRequestDto sendEmailRequestDto)
     {
         // Setting the email message

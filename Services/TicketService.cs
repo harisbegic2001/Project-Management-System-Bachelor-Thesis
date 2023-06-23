@@ -14,10 +14,13 @@ public class TicketService : ITicketService
 {
 
     private readonly ConnectionStrings _options;
+
+    private readonly IEmailService _emailService;
     
-    public TicketService(IOptions<ConnectionStrings> options)
+    public TicketService(IOptions<ConnectionStrings> options, IEmailService emailService)
     {
         _options = options.Value;
+        _emailService = emailService;
     }
     
     
@@ -26,7 +29,7 @@ public class TicketService : ITicketService
         using var connection = CreateSqlConnection();
         
         //CHECKS IF PROJECT EXISTS
-        var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync($"SELECT Projects.Id FROM Projects WHERE Id = '{projectId}'");
+        var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Projects.ProjectName FROM Projects WHERE Id = '{projectId}'");
 
         if (checkIfProjectExists is null)
         {
@@ -115,7 +118,17 @@ public class TicketService : ITicketService
             TicketKey = newTicket.TicketKey,
             TicketProject = projectName
         };
+        
+        
+        //EMAIL LOGIC
+        var asignee = await connection.QueryFirstOrDefaultAsync<ReadAsigneeDto>($"SELECT Users.FirstName, Users.Email FROM Users WHERE Id = '{userIdToBeAssgined}'");
+        
+        var projectReporter = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Users.Email FROM Users WHERE Id = '{callerId}'");
 
+        var emailForCreatingTicket = new AssignedToTicketEmailDto(asignee.Email, asignee.FirstName, checkIfProjectExists, projectReporter, createTicketDto.TicketName);
+
+        _emailService.AssignedToTicketEmailAsync(emailForCreatingTicket);
+        
         return readTicket;
 
     }

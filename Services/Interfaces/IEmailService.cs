@@ -7,4 +7,8 @@ public interface IEmailService
     string SendEmailAsync(SendEmailRequestDto sendEmailRequestDto);
 
     string SendLinkEmailAsync(string receiverAddress);
+
+    string AddToProjectEmailAsync(AddedToProjectEmailDto addedToProjectEmailDto);
+
+    string AssignedToTicketEmailAsync(AssignedToTicketEmailDto assignedToTicketEmailDto);
 }

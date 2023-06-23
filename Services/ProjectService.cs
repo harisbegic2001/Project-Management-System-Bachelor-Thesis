@@ -15,9 +15,12 @@ public class ProjectService : IProjectService
 {
     private readonly ConnectionStrings _options;
 
-    public ProjectService(IOptions<ConnectionStrings> options)
+    private readonly IEmailService _emailService;
+
+    public ProjectService(IOptions<ConnectionStrings> options, IEmailService emailService)
     {
         _options = options.Value;
+        _emailService = emailService;
     }
 
 
@@ -178,7 +181,7 @@ public class ProjectService : IProjectService
         var userIdToBeAddedId = await connection.QueryFirstOrDefaultAsync<int>($"SELECT Users.Id FROM Users WHERE Email = '{email.email}'");
         
         //CHECKS IF PROJECT EXISTS //MOGUĆE DA JE VIŠKA QUERY!!
-        var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync($"SELECT Projects.Id FROM Projects WHERE Id = '{projectId}'");
+        var checkIfProjectExists = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Projects.ProjectName FROM Projects WHERE Id = '{projectId}'");
         if (checkIfProjectExists is null)
         {
             throw new ProjectNotFoundException();
@@ -195,6 +198,15 @@ public class ProjectService : IProjectService
         var addUserToProject = await connection.ExecuteAsync("INSERT INTO UsersProjectsRelation (UserId, ProjectId, ProjectRole) values (@UserId, @ProjectId, @ProjectRole)",
             new { @ProjectId = projectId, @UserId = userIdToBeAddedId, @ProjectRole = Role.User });
 
+        //EMAIL SENDING LOGIC
+        var nameOfAddedPerson = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Users.FirstName FROM Users WHERE Email = '{email.email}'");
+
+        var projectReporter = await connection.QueryFirstOrDefaultAsync<string>($"SELECT Users.Email FROM Users WHERE Id = '{callerId}'");
+        
+        var addedToProjectEmail = new AddedToProjectEmailDto(email.email, nameOfAddedPerson, checkIfProjectExists, projectReporter);
+
+        _emailService.AddToProjectEmailAsync(addedToProjectEmail);
+        
         return addUserToProject;
     }
 
