@@ -22,5 +22,10 @@ public class User
     public Role AppRole { get; set; }
 
     public string? Email { get; set; }
-    
+
+    public bool IsActivated { get; set; }
+
+    public string? EmailVerificationCode { get; set; }
+
+    public DateTime CodeExpirationTime { get; set; }
 }

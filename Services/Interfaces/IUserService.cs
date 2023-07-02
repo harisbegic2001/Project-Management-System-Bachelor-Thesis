@@ -15,7 +15,6 @@ public interface IUserService
 
     Task<IEnumerable<User>> GetAllUsersOnProjectAsync(int projectId);
 
-    
-
+    Task<ReadUserDto> ActivateUserAsync(AcitvateUserDto acitvateUserRequestDto);
 
 }

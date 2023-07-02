@@ -6,7 +6,7 @@ public interface IEmailService
 {
     string SendEmailAsync(SendEmailRequestDto sendEmailRequestDto);
 
-    string SendLinkEmailAsync(string receiverAddress);
+    string SendLinkEmailAsync(string receiverAddress, string verificationCode);
 
     string AddToProjectEmailAsync(AddedToProjectEmailDto addedToProjectEmailDto);
 

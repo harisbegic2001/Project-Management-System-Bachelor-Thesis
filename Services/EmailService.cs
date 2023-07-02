@@ -23,12 +23,12 @@ public class EmailService : IEmailService
     
     
 
-    public  string SendLinkEmailAsync(string receiverAddress)
+    public  string SendLinkEmailAsync(string receiverAddress, string verificationCode)
     {
-        var loginLink = _options.LoginLink;
+
         var body = $"<div>Dear,</div> <br/>" +
-                   "<div>Welcome to our app in order to use our app please follow the link: </div>" +
-                   $"<div>{loginLink}</div> <br/>" +
+                   "<div>Please verify your email with the Verification Code bellow:</div>" +
+                   $"<div>{verificationCode}</div> <br/>" +
                    "<div>See you soon,</div>" +
                    "<div>Admin Team</div>";
 

@@ -7,9 +7,11 @@ using JWT_Implementation.DTOs;
 using JWT_Implementation.Entities;
 using JWT_Implementation.EnvironmentSettings;
 using JWT_Implementation.Exceptions;
+using JWT_Implementation.Helpers;
 using JWT_Implementation.Services.Interfaces;
 using JWT_Implementation.TokenService;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace JWT_Implementation.Services;
 
@@ -52,7 +54,9 @@ public class UserService : IUserService
             PasswordSalt = hmac.Key,
             AppRole = Role.User,
             Email = userDto.Email,
-
+            IsActivated = false,
+            EmailVerificationCode = CodeGenerator.GenerateCode(),
+            CodeExpirationTime = DateTime.Now.AddMinutes(10)
         };
 
         if (String.IsNullOrWhiteSpace(newUser.FirstName) || String.IsNullOrWhiteSpace(newUser.LastName))
@@ -63,16 +67,15 @@ public class UserService : IUserService
         var checkUserId = newUser.Id;
 
         var newHero = await connection.ExecuteAsync(
-            "insert into Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email) values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email)",
+            "insert into Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email, IsActivated, EmailVerificationCode, CodeExpirationTime) values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email,  @IsActivated, @EmailVerificationCode, @CodeExpirationTime)",
             newUser);
 
-        _emailService.SendLinkEmailAsync(newUser.Email!);
+      _emailService.SendLinkEmailAsync(newUser.Email!, newUser.EmailVerificationCode);
         
         return new ReadUserDto
         {
             Id = newUser.Id,
             Email = newUser.Email,
-            Token = _tokenService.CreateToken(newUser) //Neće trebati 
         };
     }
 
@@ -156,7 +159,32 @@ public class UserService : IUserService
         return usersOnProject;
 
     }
-    
+
+    public async Task<ReadUserDto> ActivateUserAsync(AcitvateUserDto acitvateUserDto)
+    {
+        using var connection = CreateSqlConnection();
+
+        var existingUser = await connection.QueryFirstOrDefaultAsync<User>($"SELECT * FROM Users WHERE Email = '{acitvateUserDto.Email}'");
+
+        if (DateTime.Now > existingUser.CodeExpirationTime)
+        {
+            throw new CodeExpiredException();
+        }
+
+        if (!existingUser.EmailVerificationCode!.Equals(acitvateUserDto.VerificationCode))
+        {
+            throw new InvalidVerificationCodeException();
+        }
+
+        await connection.ExecuteAsync($"UPDATE Users SET IsActivated = '{true}', EmailVerificationCode = '{null}', CodeExpirationTime = '{null}' WHERE Id ='{existingUser.Id}'");
+        
+        return new ReadUserDto
+        {
+            Email = existingUser.Email,
+            Token = _tokenService.CreateToken(existingUser),
+        };
+    }
+
     private SqlConnection CreateSqlConnection()
     {
         return new SqlConnection(_options.DefaultConnection);

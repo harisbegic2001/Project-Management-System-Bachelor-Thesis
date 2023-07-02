@@ -74,7 +74,7 @@ public class UsersController : ControllerBase
         
         return Ok( await _userService.GetUsersAsync());
     }
-
+    
     [HttpPut]
     [Authorize(Roles = nameof(Role.Admin))]
     public async Task<ActionResult> UpdateUserRoleAsync(int id, string role)
@@ -105,4 +105,23 @@ public class UsersController : ControllerBase
 
    
     }
+
+    [HttpPut("activate")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ReadUserDto>> ActivateUserAsync(AcitvateUserDto acitvateUserDto)
+    {
+        try
+        {
+            return Ok(await _userService.ActivateUserAsync(acitvateUserDto));
+        }
+        catch (CodeExpiredException e)
+        {
+            return Unauthorized("Your confirmation code has expired, please try again.");
+        }
+        catch (InvalidVerificationCodeException e)
+        {
+            return Unauthorized("Invalid Verification code.");
+        }
+    }
+    
 }
