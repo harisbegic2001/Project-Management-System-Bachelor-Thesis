@@ -64,6 +64,11 @@ public class UsersController : ControllerBase
         {
             return Unauthorized(e.Message);
         }
+        catch (AccountNotActiveException)
+        {
+            return Unauthorized("Account is not activated!");
+        }
+        
     }
 
 
