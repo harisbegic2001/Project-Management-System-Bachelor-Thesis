@@ -5,7 +5,6 @@ using JWT_Implementation.Services;
 using JWT_Implementation.Services.Interfaces;
 using JWT_Implementation.TokenService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
@@ -35,6 +34,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.Configure<ConnectionStrings>(builder.Configuration.GetSection(nameof(ConnectionStrings)));
 builder.Services.Configure<SecretConfiguration>(builder.Configuration.GetSection(nameof(SecretConfiguration)));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection(nameof(EmailSettings)));
+builder.Services.Configure<GoogleSettings>(builder.Configuration.GetSection(nameof(GoogleSettings)));
 builder.Services.AddOptions();
 
 //DependencyInjection
@@ -61,7 +61,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-
 builder.Services.AddScoped<ITokenService, TokenService>();
 var app = builder.Build();
 // Configure the HTTP request pipeline.
@@ -74,7 +73,7 @@ if (app.Environment.IsDevelopment())
 //Custom exception Middleware (GLOBAL ERROR HANDLING)
 app.ConfigureExceptionMiddleware();
 app.UseHttpsRedirection();
-app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:4200"));
+app.UseCors(x => x.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:4200"));
 app.UseAuthentication(); //Do you have a Valid Token?
 app.UseAuthorization(); //After It is known that we have a valid token what are we allowed to do with this token
 app.MapControllers();

@@ -50,3 +50,8 @@ C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6
 C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\MimeKit.dll
 C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\BouncyCastle.Crypto.dll
 C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\RestSharp.dll
+C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\Microsoft.AspNetCore.Authentication.Google.dll
+C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\Google.Apis.dll
+C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\Google.Apis.Auth.PlatformServices.dll
+C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\Google.Apis.Auth.dll
+C:\Users\User\RiderProjects\JWT_Implementation\JWT_Implementation\bin\Debug\net6.0\Google.Apis.Core.dll

@@ -70,7 +70,7 @@ public class UserService : IUserService
             "insert into Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email, IsActivated, EmailVerificationCode, CodeExpirationTime) values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email,  @IsActivated, @EmailVerificationCode, @CodeExpirationTime)",
             newUser);
 
-     // _emailService.SendLinkEmailAsync(newUser.Email!, newUser.EmailVerificationCode);
+     _emailService.SendLinkEmailAsync(newUser.Email!, newUser.EmailVerificationCode);
         
         return new ReadUserDto
         {

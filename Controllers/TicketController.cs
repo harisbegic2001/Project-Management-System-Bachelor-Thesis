@@ -1,6 +1,6 @@
 using System.Security.Claims;
+using JWT_Implementation.Constants;
 using JWT_Implementation.DTOs;
-using JWT_Implementation.Entities;
 using JWT_Implementation.Exceptions;
 using JWT_Implementation.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -138,6 +138,12 @@ public class TicketController : ControllerBase
         {
             return BadRequest(e.Message);
         }
+    }
+
+    [HttpGet("types")]
+    public  ActionResult<string> GetAllTicketTypesAsync()
+    {
+        return Ok(TicketConstants.TicketType);
     }
 
 

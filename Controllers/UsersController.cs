@@ -1,9 +1,6 @@
 using System.Data.SqlClient;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using Dapper;
-using JWT_Implementation.Constants;
+using Google.Apis.Auth;
 using JWT_Implementation.DTOs;
 using JWT_Implementation.Entities;
 using JWT_Implementation.EnvironmentSettings;
@@ -22,10 +19,19 @@ public class UsersController : ControllerBase
 {
 
     private readonly IUserService _userService;
+    
+    private readonly GoogleSettings _googleSettings;
 
-    public UsersController(IUserService userService)
+    private readonly ITokenService _tokenService;
+
+    private readonly ConnectionStrings _connection;
+
+    public UsersController(IUserService userService, IOptions<GoogleSettings> googleOptions, ITokenService tokenService, IOptions<ConnectionStrings> connection)
     {
         _userService = userService;
+        _googleSettings = googleOptions.Value;
+        _tokenService = tokenService;
+        _connection = connection.Value;
     }
 
     /// <summary>
@@ -129,4 +135,71 @@ public class UsersController : ControllerBase
         }
     }
     
+    
+    [HttpPost("LoginWithGoogle")]
+    public async Task<IActionResult> LoginWithGoogle([FromBody] string credential)
+    {
+        using var connection = CreateSqlConnection();
+        
+        var settings = new GoogleJsonWebSignature.ValidationSettings()
+        {
+            Audience = new List<string> { _googleSettings.ClientId! }
+        };
+
+        var payload = await GoogleJsonWebSignature.ValidateAsync(credential, settings);
+
+        var user = await connection.QueryFirstOrDefaultAsync<User>($"SELECT * FROM Users WHERE Email = '{payload.Email}'");
+
+        if (user is not null)
+        {
+            return Ok(new ReadUserDto
+                {
+                    Email = user.Email,
+                    Token = _tokenService.CreateToken(user),
+                    Id = user.Id
+                }
+                );
+        }
+        else
+        {
+            var userToBeAdded = new User
+            {
+                Id = 0,
+                FirstName = payload.Name,
+                LastName = null,
+                Occupation = null,
+                Username = payload.Email,
+                PasswordHash = new byte[]
+                {
+                },
+                PasswordSalt = new byte[]
+                {
+                },
+                AppRole = Role.User,
+                Email = payload.Email,
+                IsActivated = true,
+                EmailVerificationCode = null,
+                CodeExpirationTime = DateTime.Now,
+
+            };
+
+            await connection.ExecuteAsync("INSERT INTO Users (Firstname, Lastname, Occupation, Username, PasswordHash, PasswordSalt, AppRole, Email, IsActivated, EmailVerificationCode, CodeExpirationTime) " +
+                                          "values (@FirstName, @Lastname, @Occupation, @Username, @PasswordHash, @PasswordSalt, @AppRole, @Email,  @IsActivated, @EmailVerificationCode, @CodeExpirationTime)", userToBeAdded);
+            
+            
+            return Ok(new ReadUserDto
+                {
+                    Email = userToBeAdded.Email,
+                    Token = _tokenService.CreateToken(userToBeAdded),
+                    Id = userToBeAdded.Id
+                }
+            );
+        }
+    }
+    
+    
+    private SqlConnection CreateSqlConnection()
+    {
+        return new SqlConnection(_connection.DefaultConnection);
+    }
 }
